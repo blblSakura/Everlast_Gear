@@ -38,7 +38,7 @@ neoForge {
 
     // 声明你的模组
     mods {
-        everlastingarmor {  // 改为你的 modId
+        everlastgear {  // 改为你的 modId
             sourceSet sourceSets.main
         }
     }
