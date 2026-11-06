@@ -4,9 +4,9 @@ import net.neoforged.fml.common.Mod;
 
 @Mod(EverlastGear.MODID)
 public class EverlastGear {
-    public static final String MODID = "everlastgear";
+    public static final String MODID = "everlast_gear";
 
     public EverlastGear() {
-        ConfigHandler.loadConfig(); // 必须包含这一行
+        ConfigHandler.loadConfig();
     }
 }
