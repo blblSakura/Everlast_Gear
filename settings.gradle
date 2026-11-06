@@ -1,12 +1,51 @@
 pluginManagement {
     repositories {
+        // ModDevGradle 从 NeoForged 官方 Maven 获取（需走本机代理，其余仓库直连）
+        maven {
+            name = 'NeoForged'
+            url = 'https://maven.neoforged.net/releases'
+        }
+        maven {
+            name = 'AliyunPublic'
+            url = 'https://maven.aliyun.com/repository/public'
+        }
         gradlePluginPortal()
+    }
+}
+
+// 强制所有配置（包括 ModDevGradle 的内部配置）使用这里声明的仓库：本地镜像优先
+// 镜像目录按以下顺序探测：项目内 ./nf-mirror → 上级目录 ../nf-mirror → D:/nf-mirror
+// 换设备时只需把 nf-mirror 目录放到其中任一位置（详见交接文档）
+def mirrorCandidates = [new File(rootDir, 'nf-mirror'), new File(rootDir.parentFile, 'nf-mirror'), new File('D:/nf-mirror')]
+def mirrorDir = mirrorCandidates.find { it.isDirectory() }
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.PREFER_SETTINGS
+    repositories {
+        if (mirrorDir != null) {
+            maven { url = mirrorDir.toURI() }
+        }
+        maven {
+            name = 'Mojang Minecraft Libraries'   // 直连
+            url = 'https://libraries.minecraft.net'
+        }
         mavenCentral()
         maven {
-            name = "NeoForged"
-            url = 'https://maven.neoforged.net/releases'
+            name = 'Mojang Meta'                  // NeoForged 托管的 Mojang 元数据镜像，需走代理(65533)
+            url = 'https://maven.neoforged.net/mojang-meta/'
+        }
+        maven {
+            name = 'NeoForged'                    // 需走本机代理(经 retry-relay 65533)
+            url = 'https://maven.neoforged.net/releases/'
+        }
+        maven {
+            name = 'FabricMC'
+            url = 'https://maven.fabricmc.net/'
+        }
+        maven {
+            name = 'AliyunPublic'
+            url = 'https://maven.aliyun.com/repository/public'
         }
     }
 }
 
-rootProject.name = 'MDK-1.21.1-NeoGradle-main'
+rootProject.name = 'EverlastGear-26.3'

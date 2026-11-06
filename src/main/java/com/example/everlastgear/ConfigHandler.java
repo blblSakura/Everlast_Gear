@@ -3,7 +3,7 @@ package com.example.everlastgear;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -47,14 +47,16 @@ public class ConfigHandler {
     private static void createDefaultConfig() {
         try {
             Files.createDirectories(CONFIG_PATH.getParent());
-            // 生成带注释的默认配置文件
+            // 默认配置：黑名单模式，默认排除玻璃剑
             String defaultJson = """
-            {
-              "mode": "DENYLIST",
-              "items": [],
-              "_comment": "To use ALLOWLIST, set mode to 'ALLOWLIST' and add item IDs to the list."
-            }
-            """;
+        {
+          "mode": "DENYLIST",
+          "items": [
+            "twilightforest:glass_sword"
+          ],
+          "_comment": "To use ALLOWLIST, set mode to 'ALLOWLIST' and add item IDs to the list."
+        }
+        """;
             try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
                 writer.write(defaultJson);
             }
@@ -67,7 +69,7 @@ public class ConfigHandler {
 
     public static boolean isItemAffected(ItemStack stack) {
         if (stack.isEmpty()) return false;
-        ResourceLocation id = stack.getItem().builtInRegistryHolder().key().location();
+        Identifier id = stack.getItem().builtInRegistryHolder().key().identifier();
         String itemId = id.toString();
         boolean inList = config.items.contains(itemId);
         if ("ALLOWLIST".equals(config.mode)) {
