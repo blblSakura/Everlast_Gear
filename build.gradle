@@ -1,8 +1,8 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'idea'                         // 新增这一行
-    id 'net.neoforged.moddev' version '2.0.99'
+    id 'net.neoforged.moddev' version '2.0.148'
+    id 'idea'
 }
 
 version = mod_version
@@ -12,56 +12,84 @@ base {
     archivesName = mod_id
 }
 
-// Mojang 在 1.21.1 中使用 Java 21，因此模组也需要编译为 Java 21
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+// Mojang ships Java 25 to end users in 26.1.2, so mods should target Java 25.
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
-// 配置 NeoForge 扩展
 neoForge {
-    // 指定 NeoForge 的版本，使用你需要的 21.1.233
-    version = "21.1.233"
+    // Specify the version of NeoForge to use.
+    version = project.neo_version
 
-    // 开启 Access Transformer 校验（推荐开启）
-    validateAccessTransformers = true
-
-    // 配置运行环境
+    // Default run configurations.
+    // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
             client()
         }
+
         server {
             server()
+            programArgument '--nogui'
         }
+
         data {
-            data()
+            clientData()
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        // applies to all the run configs above
+        configureEach {
+            // Recommended logging data for a userdev environment
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            // Recommended logging level for the console
+            logLevel = org.slf4j.event.Level.DEBUG
         }
     }
 
-    // 声明你的模组
     mods {
-        everlastgear {  // 改为你的 modId
-            sourceSet sourceSets.main
+        // define mod <-> source bindings
+        // these are used to tell the game which sources are for which mod
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
         }
     }
 }
 
-// 如果项目有资源文件，需要替换其中的变量
-tasks.withType(ProcessResources).configureEach {
+// 依赖仓库统一在 settings.gradle 的 dependencyResolutionManagement 中声明（本地镜像优先）
+
+// Sets up a dependency configuration called 'localRuntime'.
+// This configuration should be used instead of 'runtimeOnly' to declare
+// a dependency that will be present for runtime testing but that is
+// "optional", meaning it will not be pulled by dependents of this mod.
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+dependencies {
+}
+
+// This block of code expands all declared replace properties in the specified resource targets.
+// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [
             minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
             neo_version            : neo_version,
-            loader_version_range   : loader_version_range,
             mod_id                 : mod_id,
             mod_name               : mod_name,
             mod_license            : mod_license,
             mod_version            : mod_version,
     ]
     inputs.properties replaceProperties
-
-    filesMatching(['META-INF/neoforge.mods.toml']) {
-        expand replaceProperties
-    }
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
 }
+// Include the output of "generateModMetadata" as an input directory for the build
+// this works with both building through Gradle and the IDE.
+sourceSets.main.resources.srcDir generateModMetadata
+// To avoid having to run "generateModMetadata" manually, make it run on every project reload
+neoForge.ideSyncTask generateModMetadata
 
 // 用于发布模组的配置（如果需要）
 publishing {
@@ -77,12 +105,11 @@ publishing {
     }
 }
 
-// 设置 Java 编译编码
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
-// IDEA 配置，自动下载源码和文档
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
 idea {
     module {
         downloadSources = true
