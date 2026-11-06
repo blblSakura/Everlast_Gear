@@ -1,5 +1,7 @@
 # Everlast Gear
 
+[构建说明 / Build instructions](BUILDING.md)
+
 <p align="center">
   <a href="#chinese">🇨🇳 中文</a> &nbsp;|&nbsp; <a href="#english">🇬🇧 English</a>
 </p>
