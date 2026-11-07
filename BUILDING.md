@@ -26,3 +26,22 @@ Linux/macOS：
 测试代码位于 src/testmod，只加载于 GameTest 运行，不进入发布 JAR。测试涵盖耐久耗尽保留、大额损耗、破损交互、护甲属性、铁砧、经验修补、绑定诅咒和名单配置。请在独立测试目录运行；测试会暂时更改该运行目录的配置并在结束后还原。
 
 GameTest 使用专用服务器，`-x downloadAssets` 跳过无关的客户端声音、字体等资源下载。
+
+## NeoForge 1.20.1 兼容验证
+
+默认构建仍使用 Forge 47.4.28，同一份成品支持 Forge 与 NeoForge 1.20.1，加载器依赖范围为 [47.1.0,48)。
+
+开发环境可切换至 NeoForge 47.1.106：
+
+```powershell
+.\build.cmd --no-daemon "-Ploader_group=net.neoforged" "-Pforge_version=47.1.106" runGameTestServer -x downloadAssets
+```
+
+NeoForge 1.20.1 的 Maven 坐标为 net.neoforged:forge，Java 包名、模组依赖 ID 和 mods.toml 格式沿用 Forge。上述参数只改变验证环境；日常安装使用同一个 forge.jar。
+
+CI 先在 Forge 上构建和测试，再在 NeoForge 上复用相同的编译输出进行测试，避免为两个加载器分别编译掩盖兼容问题：
+
+```powershell
+.\build.cmd --no-daemon build runGameTestServer -x downloadAssets
+.\build.cmd --no-daemon "-Ploader_group=net.neoforged" "-Pforge_version=47.1.106" runGameTestServer -x downloadAssets -x compileJava -x processResources -x compileTestmodJava -x processTestmodResources
+```

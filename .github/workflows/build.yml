@@ -30,9 +30,15 @@ jobs:
       - name: Verify equipment behavior
         run: ./gradlew --no-daemon runGameTestServer -x downloadAssets --stacktrace
 
+      - name: Verify NeoForge using the Forge-compiled classes
+        run: >-
+          ./gradlew --no-daemon -Ploader_group=net.neoforged -Pforge_version=47.1.106
+          runGameTestServer -x downloadAssets -x compileJava -x processResources
+          -x compileTestmodJava -x processTestmodResources --stacktrace
+
       - name: Upload mod JAR
         uses: actions/upload-artifact@v4
         with:
-          name: EverlastGear-1.20.1-Forge
+          name: EverlastGear-1.20.1-Forge-NeoForge
           path: build/libs/*.jar
           if-no-files-found: error

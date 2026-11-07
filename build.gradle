@@ -37,6 +37,10 @@ minecraft {
 repositories {
     mavenCentral()
     maven { url = 'https://maven.minecraftforge.net' }
+    exclusiveContent {
+        forRepository { maven { url = 'https://maven.neoforged.net/releases' } }
+        filter { includeGroupByRegex 'net[.]neoforged([.].*)?' }
+    }
     maven { url = 'https://libraries.minecraft.net' }
     maven {
         url = 'https://repo.spongepowered.org/maven'
@@ -44,7 +48,7 @@ repositories {
     }
 }
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    minecraft "${providers.gradleProperty('loader_group').getOrElse('net.minecraftforge')}:forge:${minecraft_version}-${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 mixin {
