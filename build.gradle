@@ -1,118 +1,73 @@
 plugins {
-    id 'java-library'
-    id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.148'
-    id 'idea'
+    id 'java'
+    id 'net.minecraftforge.gradle' version '6.0.54'
+    id 'org.spongepowered.mixin' version '0.7.38'
 }
-
-version = mod_version
+version = "${mod_version}-mc${minecraft_version}-forge"
 group = mod_group_id
-
-base {
-    archivesName = mod_id
-}
-
-// Mojang ships Java 25 to end users in 26.1.2, so mods should target Java 25.
-java.toolchain.languageVersion = JavaLanguageVersion.of(25)
-
-neoForge {
-    // Specify the version of NeoForge to use.
-    version = project.neo_version
-
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
-    runs {
-        client {
-            client()
-        }
-
-        server {
-            server()
-            programArgument '--nogui'
-        }
-
-        data {
-            clientData()
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
-
-        // applies to all the run configs above
-        configureEach {
-            // Recommended logging data for a userdev environment
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
-            // Recommended logging level for the console
-            logLevel = org.slf4j.event.Level.DEBUG
-        }
-    }
-
-    mods {
-        // define mod <-> source bindings
-        // these are used to tell the game which sources are for which mod
-        "${mod_id}" {
-            sourceSet(sourceSets.main)
-        }
+base { archivesName = mod_id }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+sourceSets {
+    testmod {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
     }
 }
-
-// 依赖仓库统一在 settings.gradle 的 dependencyResolutionManagement 中声明（本地镜像优先）
-
-// Sets up a dependency configuration called 'localRuntime'.
-// This configuration should be used instead of 'runtimeOnly' to declare
-// a dependency that will be present for runtime testing but that is
-// "optional", meaning it will not be pulled by dependents of this mod.
 configurations {
-    runtimeClasspath.extendsFrom localRuntime
+    testmodImplementation.extendsFrom implementation
+    testmodRuntimeOnly.extendsFrom runtimeOnly
 }
-
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            mods { "${mod_id}" { source sourceSets.main } }
+        }
+        client { }
+        server { args '--nogui' }
+        gameTestServer {
+            property 'forge.enabledGameTestNamespaces', mod_id
+            mods { "${mod_id}_tests" { source sourceSets.testmod } }
+        }
+    }
+}
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.minecraftforge.net' }
+    maven { url = 'https://libraries.minecraft.net' }
+    maven {
+        url = 'https://repo.spongepowered.org/maven'
+        content { includeGroup 'org.spongepowered' }
+    }
+}
 dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
-
-// This block of code expands all declared replace properties in the specified resource targets.
-// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
-var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
-    var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
-            mod_license            : mod_license,
-            mod_version            : mod_version,
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from "src/main/templates"
-    into "build/generated/sources/modMetadata"
+mixin {
+    add sourceSets.main, 'everlast_gear.refmap.json'
+    config 'everlast_gear.mixins.json'
 }
-// Include the output of "generateModMetadata" as an input directory for the build
-// this works with both building through Gradle and the IDE.
-sourceSets.main.resources.srcDir generateModMetadata
-// To avoid having to run "generateModMetadata" manually, make it run on every project reload
-neoForge.ideSyncTask generateModMetadata
-
-// 用于发布模组的配置（如果需要）
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url = "https://maven.aliyun.com/repository/public"
-        }
-    }
+def generatedRefmap = layout.buildDirectory.file('tmp/compileJava/compileJava-refmap.json')
+tasks.named('compileJava', JavaCompile).configure {
+    // MixinGradle's annotation processor output must survive Gradle build caching.
+    outputs.file(generatedRefmap)
+    outputs.file(layout.buildDirectory.file('tmp/compileJava/compileJava-mappings.tsrg'))
 }
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+tasks.named('processResources', ProcessResources).configure {
+    dependsOn tasks.named('compileJava')
+    from(generatedRefmap) { rename { 'everlast_gear.refmap.json' } }
+    def props = [mod_id: mod_id, mod_version: mod_version, mod_name: mod_name,
+                 mod_license: mod_license, minecraft_version: minecraft_version]
+    inputs.properties props
+    filesMatching('META-INF/mods.toml') { expand props }
 }
-
-// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
-    }
+tasks.named('jar', Jar).configure {
+    filesMatching('everlast_gear.refmap.json') { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
+    manifest.attributes('MixinConfigs': 'everlast_gear.mixins.json')
+    finalizedBy 'reobfJar'
 }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }

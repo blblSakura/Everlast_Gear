@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.example.everlastgear.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "everlast_gear.refmap.json",
+  "mixins": ["ItemStackMixin"],
+  "injectors": {"defaultRequire": 1}
+}

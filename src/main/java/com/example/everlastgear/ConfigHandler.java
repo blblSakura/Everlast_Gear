@@ -3,9 +3,9 @@ package com.example.everlastgear;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.fml.loading.FMLPaths;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -41,7 +41,8 @@ public class ConfigHandler {
         if (!"ALLOWLIST".equals(config.mode) && !"DENYLIST".equals(config.mode)) {
             config.mode = "DENYLIST";
         }
-        config.items.removeIf(String::isBlank);
+        if (config.items == null) config.items = new ArrayList<>();
+        config.items.removeIf(item -> item == null || item.isBlank());
     }
 
     private static void createDefaultConfig() {
@@ -69,7 +70,7 @@ public class ConfigHandler {
 
     public static boolean isItemAffected(ItemStack stack) {
         if (stack.isEmpty()) return false;
-        Identifier id = stack.getItem().builtInRegistryHolder().key().identifier();
+        ResourceLocation id = stack.getItem().builtInRegistryHolder().key().location();
         String itemId = id.toString();
         boolean inList = config.items.contains(itemId);
         if ("ALLOWLIST".equals(config.mode)) {

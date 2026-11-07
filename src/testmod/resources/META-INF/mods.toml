@@ -1,0 +1,7 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+[[mods]]
+modId="everlast_gear_tests"
+version="1.0.0"
+displayName="Everlast Gear GameTests"

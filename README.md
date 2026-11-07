@@ -1,101 +1,39 @@
-# Everlast Gear
+# Everlast Gear — Minecraft 1.20.1 Forge
 
-[构建说明 / Build instructions](BUILDING.md)
+此分支为 **Minecraft 1.20.1 / Forge 47.4.x / Java 17** 版本，模组版本 1.0.2，作者 dysakura。
 
-<p align="center">
-  <a href="#chinese">🇨🇳 中文</a> &nbsp;|&nbsp; <a href="#english">🇬🇧 English</a>
-</p>
+## 功能
 
----
+- 受保护的工具、武器、护甲和其他可损耗物品在剩余 1 点耐久时进入破损状态，不会因原版扣耐久而消失。
+- 破损工具禁止挖掘、普通攻击及物品/方块右键操作；破损护甲移除物品属性加成。
+- 铁砧和经验修补沿用原版机制；修复到剩余耐久大于 1 后恢复使用及护甲属性。
+- 绑定诅咒物品不受保护，正常损坏。
+- 支持白名单/黑名单，默认排除暮色森林玻璃剑。
 
-<a name="chinese"></a>
+配置文件首次启动时生成于 `config/everlast_gear.json`：
 
-## 🇨🇳 中文文档
+```json
+{
+  "mode": "DENYLIST",
+  "items": ["twilightforest:glass_sword"]
+}
+```
 
-一个为 Minecraft NeoForge 设计的模组：当工具或装备耐久度归零时，物品不会消失，而是进入“破损”状态。破损的工具无法正常使用，破损的护甲暂时失去保护效果（护甲失效功能开发中），但物品仍保留在背包中，可通过铁砧或经验修补附魔修复。
+`DENYLIST` 保护名单之外的物品；`ALLOWLIST` 只保护名单中的物品。更改配置后重启游戏/服务器。
 
-### ✨ 功能特性
+## 安装
 
-- **耐久归零不消失**：所有工具（镐、斧、铲、锄、剑）和护甲（头盔、胸甲、护腿、靴子）耐久耗尽后不会销毁，而是变为“破损”状态（耐久条显示为红色满格）。
-- **破损工具无法使用**：
-  - 无法挖掘方块（左键无效）
-  - 无法执行右键操作（如锄地、剥皮等）
-  - 无法攻击实体（剑、斧等武器）
-- **破损护甲**：物品不会消失，但护甲保护效果暂时失效。
-- **铁砧修复**：将破损物品放入铁砧，使用对应修复材料修复后，破损标记自动移除，物品恢复正常。
-- **经验修补修复**：带有“经验修补”附魔的破损物品，在玩家获得经验时会自动消耗经验进行修复，修复后破损标记移除。
-- **绑定诅咒**：带有“绑定诅咒”附魔的破损物品，不会受到本模组影响。
+将 `everlast_gear-1.0.2-mc1.20.1-forge.jar` 放入 Forge 1.20.1 实例的 `mods` 目录。单人游戏安装在客户端，联机建议客户端和服务器均安装。Mixin 由 Forge 提供，无需安装独立前置模组。
 
-### 🎮 使用说明
+## 构建与验证
 
-- 正常使用工具/装备直到耐久归零，物品会自动变为破损状态并保留。
-- 破损工具无法进行任何有效操作，请及时修复。
-- 修复方式：
-  - **铁砧**：将破损物品与修复材料（如铁锭、钻石等）放入铁砧，完成修复后破损状态解除。
-  - **经验修补**：为物品附魔“经验修补”，之后获取经验即可自动修复，直至完全修复。
-- 支持版本：
-  - 已支持 NeoForge 1.21.1、26.1.x、26.2、26.3
+请参阅 [BUILDING.md](BUILDING.md)。
 
-### 👤 作者
+本版本通过 ItemStack 的 Mixin 在扣耐久时钳制损耗值，替代旧版无效的每刻锁定条件。该改动只属于此 Forge 分支。
+模组主要兼容原版及遵循 ItemStack 扣耐久流程的物品；其他模组若直接删除物品或自行实现损坏流程，需要单独验证。
 
-- **bilibilisakura/dysakura**
-- 欢迎提交 Issue 或 Pull Request 反馈问题与建议。
+## English
 
-### 🙏 致谢
+Minecraft 1.20.1 Forge port. Requires Java 17 and Forge 47.4.x. Exhausted equipment stays at one durability, broken tools cannot mine, attack or use item/block interactions, and broken armor loses its item attribute bonuses. Vanilla anvil and Mending repair restore usability. Binding Curse items are excluded. Configure `config/everlast_gear.json` with `DENYLIST` or `ALLOWLIST`.
 
-感谢 NeoForge 社区提供的开发文档与支持。
-
-**享受游戏，再也不怕工具爆掉了！** 🎉
-
-<p align="right"><a href="#everlast-gear">⬆ 回到顶部</a></p>
-
----
-
-<a name="english"></a>
-
-## 🇬🇧 English Documentation
-
-A Minecraft NeoForge mod: when a tool or piece of equipment reaches zero durability, the item does not disappear. Instead, it enters a **Broken** state. Broken tools cannot be used normally, and broken armor temporarily loses its protection effect (armor-disabling feature is still in development). However, the item remains in the player's inventory and can be repaired using an anvil or the Mending enchantment.
-
-### ✨ Features
-
-- **No disappearance at zero durability**: All tools (pickaxe, axe, shovel, hoe, sword) and armor (helmet, chestplate, leggings, boots) are not destroyed when durability is depleted. Instead, they become **Broken** (the durability bar appears full and red).
-- **Broken tools cannot be used**:
-  - Cannot mine blocks (left-click has no effect)
-  - Cannot perform right-click actions (e.g., hoeing, stripping logs)
-  - Cannot attack entities (swords, axes, etc.)
-- **Broken armor**: The item does not disappear, but its protection effect is temporarily disabled.
-- **Anvil repair**: Place a broken item in an anvil and repair it with the appropriate repair material. Once repaired, the Broken tag is automatically removed and the item returns to normal.
-- **Mending repair**: Broken items enchanted with Mending will automatically consume XP to repair themselves when the player gains experience. Once repaired, the Broken tag is removed.
-- **Curse of Binding**: Broken items enchanted with Curse of Binding are not affected by this mod.
-
-### 🎮 Usage
-
-- Use tools/equipment normally until durability reaches zero. The item will automatically become Broken and remain in your inventory.
-- Broken tools cannot perform any effective actions. Please repair them as soon as possible.
-- Repair methods:
-  - **Anvil**: Place the broken item and the repair material (e.g., iron ingot, diamond) into an anvil. After repairing, the Broken state is removed.
-  - **Mending**: Enchant the item with Mending. Then gain XP to automatically repair it until fully restored.
-- Supported versions:
-  - NeoForge 1.21.1, 26.1.x, 26.2, 26.3 are supported.
-
-### 👤 Author
-
-- **bilibilisakura/dysakura**
-- Feel free to submit Issues or Pull Requests for bug reports and suggestions.
-
-### 🙏 Credits
-
-Thanks to the NeoForge community for development documentation and support.
-
-**Enjoy the game, and never worry about your tools breaking again!** 🎉
-
-<p align="right"><a href="#everlast-gear">⬆ Back to top</a></p>
-
----
-
-## 📄 License / 许可证
-
-This project is licensed under the **MIT License**. You are free to use, modify, and distribute this mod, but please retain the original author information.
-
-本项目采用 **MIT License**。你可以自由使用、修改和分发本模组，但请保留原作者信息。
+License: MIT. Original author: dysakura / bilibilisakura.

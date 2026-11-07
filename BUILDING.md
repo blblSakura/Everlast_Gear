@@ -1,36 +1,28 @@
 # 构建 / Building
 
-需要 JDK 25。先将 JAVA_HOME 指向 JDK 根目录，然后在仓库根目录运行：
+需要 64 位 JDK 17。将 JAVA_HOME 指向 JDK 根目录，在项目目录执行：
 
 ```powershell
-.\build.cmd build
+.\build.cmd --no-daemon clean build
 ```
 
-Linux / macOS：
+Linux/macOS：
 
 ```sh
-chmod +x gradlew
-./gradlew --no-daemon build
+./gradlew --no-daemon clean build
 ```
 
-Gradle Wrapper 自动下载 Gradle 9.2.1，产物位于 `build/libs/`。
-Minecraft 和 NeoForge 的目标版本由当前分支的 `gradle.properties` 定义。
-GitHub Actions 自动安装 JDK 25 并使用相同的 Gradle Wrapper 构建。
+成品：`build/libs/everlast_gear-1.0.2-mc1.20.1-forge.jar`。构建包含 reobfJar，发布时使用经过重混淆的最终 JAR。
 
-## 可选的本机代理 / Optional local proxy
+技术栈：Forge 47.4.28、ForgeGradle 6.0.54、Gradle 8.8、MixinGradle 0.7.38、Java 17。
+首次构建需要联网下载 Gradle、Minecraft、Forge 及相关依赖。仓库不设置本机代理或本机 JDK 路径；网络代理按需配置于用户 Gradle 配置或运行环境。
 
-仓库默认直接连接依赖仓库，不要求本地代理、工作区外的 JDK/Gradle 目录或依赖镜像。
-如本机确需代理，可将以下设置放入用户级 `~/.gradle/gradle.properties`
-（Windows 为 `%USERPROFILE%\.gradle\gradle.properties`），端口按实际情况修改：
+游戏内自动验证：
 
-```properties
-systemProp.http.proxyHost=127.0.0.1
-systemProp.http.proxyPort=65532
-systemProp.https.proxyHost=127.0.0.1
-systemProp.https.proxyPort=65532
-systemProp.http.nonProxyHosts=localhost|127.0.0.1
+```powershell
+.\build.cmd --no-daemon runGameTestServer -x downloadAssets
 ```
 
-请勿将本机代理、JDK 绝对路径或 JAVA_TOOL_OPTIONS 提交到项目配置。
-`build.cmd` 保留调用者的 JAVA_HOME、GRADLE_USER_HOME 和 JAVA_TOOL_OPTIONS。
-如有现成的 `nf-mirror`，可放在项目目录或其上一级；没有镜像也能从远程仓库构建。
+测试代码位于 src/testmod，只加载于 GameTest 运行，不进入发布 JAR。测试涵盖耐久耗尽保留、大额损耗、破损交互、护甲属性、铁砧、经验修补、绑定诅咒和名单配置。请在独立测试目录运行；测试会暂时更改该运行目录的配置并在结束后还原。
+
+GameTest 使用专用服务器，`-x downloadAssets` 跳过无关的客户端声音、字体等资源下载。
